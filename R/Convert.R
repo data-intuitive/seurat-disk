@@ -547,6 +547,9 @@ H5ADToH5Seurat <- function(
         immediate. = TRUE
       )
     }
+    if (verbose) {
+      message("Adding meta.data from obs")
+    }
     dfile$obj_copy_from(
       src_loc = source,
       src_name = 'obs',
