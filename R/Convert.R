@@ -565,6 +565,12 @@ H5ADToH5Seurat <- function(
         dtype = GuessDType(x = colnames)
       )
     }
+
+    # temporary workaround
+    dfile$close_all()
+    dfile <- h5Seurat$new(filename = dest, mode = "a", validate = FALSE)
+    assay.group <- dfile[['assays']][[assay]]
+
     rownames <- GetRownames(dset = 'obs')
     dfile$obj_copy_from(
       src_loc = dfile,

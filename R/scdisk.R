@@ -47,7 +47,7 @@ scdisk <- R6Class(
         stop("Cannot find file ", filename, call. = FALSE)
         }
       super$initialize(filename = filename, mode = mode)
-      private$validate(validate = validate, ...)
+      if (validate) private$validate(validate = validate, ...)
     },
     #' @description Handle the loss of reference to this \code{scdisk} object
     finalizer = function() {
