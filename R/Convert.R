@@ -658,7 +658,7 @@ H5ADToH5Seurat <- function(
             next
           }
           if (isTRUE(x = verbose)) {
-            message("Adding ", reduc, " as feature loadings fpr ", sreduc)
+            message("Adding ", reduc, " as feature loadings for ", sreduc)
           }
           Transpose(
             x = source[['varm']][[reduc]],
