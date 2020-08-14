@@ -309,7 +309,12 @@ H5ADToH5Seurat <- function(
     if (dfgroup$exists(name = '__categories')) {
       for (i in names(x = dfgroup[['__categories']])) {
         tname <- basename(path = tempfile(tmpdir = ''))
-        dfgroup$obj_copy_to(dst_loc = dfgroup, dst_name = tname, src_name = i)
+
+        # temporary workaround (see mojaveazure/seurat-disk#10)
+        # dfgroup$obj_copy_to(dst_loc = dfgroup, dst_name = tname, src_name = i)
+        dfgroup[[tname]] <- dfgroup[[i]][]
+        # end temporary workaround
+
         dfgroup$link_delete(name = i)
         # Because AnnData stores logicals as factors, but have too many levels
         # for factors
@@ -331,11 +336,16 @@ H5ADToH5Seurat <- function(
             dtype = dfgroup[[tname]]$get_type()
           )
           if (IsDType(x = dfgroup[['__categories']][[i]], dtype = 'H5T_STRING')) {
-            dfgroup$obj_copy_to(
-              dst_loc = dfgroup,
-              dst_name = paste0(i, '/levels'),
-              src_name = paste0('__categories/', i)
-            )
+
+            # temporary workaround (see mojaveazure/seurat-disk#10)
+            # dfgroup$obj_copy_to(
+            #   dst_loc = dfgroup,
+            #   dst_name = paste0(i, '/levels'),
+            #   src_name = paste0('__categories/', i)
+            # )
+            dfgroup[[paste0(i, "/levels")]] <- dfgroup[[paste0("__categories/", i)]][]
+            # end temporary workaround
+
           } else {
             dfgroup[[i]]$create_dataset(
               name = 'levels',
@@ -566,17 +576,16 @@ H5ADToH5Seurat <- function(
       )
     }
 
-    # temporary workaround
-    dfile$close_all()
-    dfile <- h5Seurat$new(filename = dest, mode = "a", validate = FALSE)
-    assay.group <- dfile[['assays']][[assay]]
+
 
     rownames <- GetRownames(dset = 'obs')
-    dfile$obj_copy_from(
-      src_loc = dfile,
-      src_name = paste0('meta.data/', rownames),
-      dst_name = 'cell.names'
-    )
+    # temporary workaround
+    dfile[["cell.names"]] <- dfile[[paste0("meta.data/", rownames)]][]
+    # dfile$obj_copy_from(
+    #   src_loc = dfile,
+    #   src_name = paste0('meta.data/', rownames),
+    #   dst_name = 'cell.names'
+    # )
     dfile[['meta.data']]$link_delete(name = rownames)
   } else {
     warning(
@@ -1045,7 +1054,12 @@ H5SeuratToH5AD <- function(
   if (verbose) {
     message("Adding ", x.data, " from ", assay, " as X")
   }
-  assay.group$obj_copy_to(dst_loc = dfile, dst_name = 'X', src_name = x.data)
+
+  # temporary workaround (see mojaveazure/seurat-disk#10)
+  # assay.group$obj_copy_to(dst_loc = dfile, dst_name = 'X', src_name = x.data)
+  dfile[["X"]] <- assay.group[[x.data]][]
+  # end temporary workaround
+
   if (dfile[['X']]$attr_exists(attr_name = 'dims')) {
     dims <- h5attr(x = dfile[['X']], which = 'dims')
     dfile[['X']]$create_attr(
@@ -1091,11 +1105,15 @@ H5SeuratToH5AD <- function(
     )
     if (!length(x = var.cols)) {
       var.cols <- 'features'
-      dfile[['var']]$obj_copy_to(
-        dst_loc = dfile[['var']],
-        dst_name = var.cols,
-        src_name = rownames
-      )
+
+      # temporary workaround (see mojaveazure/seurat-disk#10)
+      # dfile[['var']]$obj_copy_to(
+      #   dst_loc = dfile[['var']],
+      #   dst_name = var.cols,
+      #   src_name = rownames
+      # )
+      dfile[[paste0("var/", var.cols)]] <- dfile[[paste0("var/", rownames)]][]
+      # end temporary workaround
     }
     dfile[['var']]$create_attr(
       attr_name = 'column-order',
@@ -1109,11 +1127,16 @@ H5SeuratToH5AD <- function(
       message("Adding ", raw.data, " from ", assay, " as raw")
     }
     dfile$create_group(name = 'raw')
-    assay.group$obj_copy_to(
-      dst_loc = dfile[['raw']],
-      dst_name = 'X',
-      src_name = raw.data
-    )
+
+    # temporary workaround (see mojaveazure/seurat-disk#10)
+    # assay.group$obj_copy_to(
+    #   dst_loc = dfile[['raw']],
+    #   dst_name = 'X',
+    #   src_name = raw.data
+    # )
+    dfile[["raw/X"]] <- assay.group[[raw.data]][]
+    # end temporary workaround
+
     if (dfile[['raw/X']]$attr_exists(attr_name = 'dims')) {
       dims <- h5attr(x = dfile[['raw/X']], which = 'dims')
       dfile[['raw/X']]$create_attr(
@@ -1235,11 +1258,16 @@ H5SeuratToH5AD <- function(
       message("Adding ", graph, " as neighbors")
     }
     dgraph <- dfile[['uns']]$create_group(name = 'neighbors')
-    source[['graphs']]$obj_copy_to(
-      dst_loc = dgraph,
-      dst_name = 'distances',
-      src_name = graph
-    )
+
+    # temporary workaround (see mojaveazure/seurat-disk#10)
+    # source[['graphs']]$obj_copy_to(
+    #   dst_loc = dgraph,
+    #   dst_name = 'distances',
+    #   src_name = graph
+    # )
+    dgraph[["distances"]] <- source[[paste0("graphs/", graph)]][]
+    # end temporary workaround
+
     if (source[['graphs']][[graph]]$attr_exists(attr_name = 'dims')) {
       dims <- h5attr(x = source[['graphs']][[graph]], which = 'dims')
       dgraph[['distances']]$create_attr(
