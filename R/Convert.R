@@ -396,11 +396,15 @@ H5ADToH5Seurat <- function(
       message("Adding ", ds.map[[i]], " as ", names(x = ds.map)[i])
     }
     dst <- names(x = ds.map)[i]
-    assay.group$obj_copy_from(
-      src_loc = source,
-      src_name = ds.map[[i]],
-      dst_name = dst
-    )
+    # temporary workaround (see mojaveazure/seurat-disk#10)
+    assay.group[[dst]] <- source[[ds.map[[i]]]][]
+    # assay.group$obj_copy_from(
+    #   src_loc = source,
+    #   src_name = ds.map[[i]],
+    #   dst_name = dst
+    # )
+    # end temporary workaround
+
     # if (assay.group[[dst]]$attr_exists(attr_name = 'shape')) {
     if (isTRUE(x = AttrExists(x = assay.group[[dst]], name = 'shape'))) {
       dims <- rev(x = h5attr(x = assay.group[[dst]], which = 'shape'))
@@ -419,11 +423,14 @@ H5ADToH5Seurat <- function(
   )
   if (inherits(x = source[[features.source]], what = 'H5Group')) {
     features.dset <- GetRownames(dset = features.source)
-    assay.group$obj_copy_from(
-      src_loc = source,
-      src_name = paste(features.source, features.dset, sep = '/'),
-      dst_name = 'features'
-    )
+    # temporary workaround (see mojaveazure/seurat-disk#10)
+    assay.group[["features"]] <- source[[features.source]][[features.dset]][]
+    # assay.group$obj_copy_from(
+    #   src_loc = source,
+    #   src_name = paste(features.source, features.dset, sep = '/'),
+    #   dst_name = 'features'
+    # )
+    # end temporary workaround
   } else {
     tryCatch(
       expr = assay.group$create_dataset(
@@ -440,11 +447,15 @@ H5ADToH5Seurat <- function(
   if (scaled) {
     if (inherits(x = source[['var']], what = 'H5Group')) {
       scaled.dset <- GetRownames(dset = 'var')
-      assay.group$obj_copy_from(
-        src_loc = source,
-        src_name = paste0('var/', scaled.dset),
-        dst_name = 'scaled.features'
-      )
+      # temporary workaround (see mojaveazure/seurat-disk#10)
+      assay.group[["scaled.features"]] <- source[[paste0("var/", scaled.dset)]][]
+      # assay.group$obj_copy_from(
+      #   src_loc = source,
+      #   src_name = paste0('var/', scaled.dset),
+      #   dst_name = 'scaled.features'
+      # )
+      # end temporary workaround
+
     } else {
       tryCatch(
         expr = assay.group$create_dataset(
@@ -479,11 +490,16 @@ H5ADToH5Seurat <- function(
       if (verbose) {
         message("Adding meta.features from raw/var")
       }
-      assay.group$obj_copy_from(
-        src_loc = source,
-        src_name = 'raw/var',
-        dst_name = 'meta.features'
-      )
+
+      # temporary workaround (see mojaveazure/seurat-disk#10)
+      assay.group[["meta.features"]] <- source[["raw/var"]][]
+      # assay.group$obj_copy_from(
+      #   src_loc = source,
+      #   src_name = 'raw/var',
+      #   dst_name = 'meta.features'
+      # )
+      # end temporary workaround
+
       if (scaled) {
         features.use <- assay.group[['features']][] %in% assay.group[['scaled.features']][]
         features.use <- which(x = features.use)
@@ -518,11 +534,14 @@ H5ADToH5Seurat <- function(
       if (verbose) {
         message("Adding meta.features from var")
       }
-      assay.group$obj_copy_from(
-        src_loc = source,
-        src_name = 'var',
-        dst_name = 'meta.features'
-      )
+      # temporary workaround (see mojaveazure/seurat-disk#10)
+      assay.group[["meta.features"]] <- source[["var"]][]
+      # assay.group$obj_copy_from(
+      #   src_loc = source,
+      #   src_name = 'var',
+      #   dst_name = 'meta.features'
+      # )
+      # end temporary workaround
     } else {
       warning(
         "Cannot yet add feature-level metadata from compound datasets",
@@ -560,11 +579,15 @@ H5ADToH5Seurat <- function(
     if (verbose) {
       message("Adding meta.data from obs")
     }
-    dfile$obj_copy_from(
-      src_loc = source,
-      src_name = 'obs',
-      dst_name = 'meta.data'
-    )
+
+    # temporary workaround (see mojaveazure/seurat-disk#10)
+    dfile[["meta.data"]] <- source[["obs"]][]
+    # dfile$obj_copy_from(
+    #   src_loc = source,
+    #   src_name = 'obs',
+    #   dst_name = 'meta.data'
+    # )
+    # end temporary workaround
     ColToFactor(dfgroup = dfile[['meta.data']])
     # if (dfile[['meta.data']]$attr_exists(attr_name = 'column-order')) {
     if (isTRUE(x = AttrExists(x = dfile[['meta.data']], name = 'column-order'))) {
@@ -699,11 +722,15 @@ H5ADToH5Seurat <- function(
               immediate. = TRUE
             )
           } else {
-            dfile[['reductions']][[sreduc]]$obj_copy_from(
-              src_loc = assay.group,
-              src_name = assay.features,
-              dst_name = 'features'
-            )
+            # temporary workaround (see mojaveazure/seurat-disk#10)
+            dfile[['reductions']][[sreduc]][["features"]] <- assay.group[[assay.features]][]
+            # dfile[['reductions']][[sreduc]]$obj_copy_from(
+            #   src_loc = assay.group,
+            #   src_name = assay.features,
+            #   dst_name = 'features'
+            # )
+            # end temporary workaround
+
           }
         }
       } else {
@@ -724,11 +751,15 @@ H5ADToH5Seurat <- function(
           message("Adding miscellaneous information for ", reduc)
         }
         dfile[['reductions']][[reduc]]$link_delete(name = 'misc')
-        dfile[['reductions']][[reduc]]$obj_copy_from(
-          src_loc = source[['uns']],
-          src_name = reduc,
-          dst_name = 'misc'
-        )
+        # temporary workaround (see mojaveazure/seurat-disk#10)
+        dfile[["reductions/misc"]] <- source[["uns"]][[reduc]][]
+        # dfile[['reductions']][[reduc]]$obj_copy_from(
+        #   src_loc = source[['uns']],
+        #   src_name = reduc,
+        #   dst_name = 'misc'
+        # )
+        # end temporary workaround
+
         if ('variance' %in% names(x = dfile[['reductions']][[reduc]][['misc']])) {
           if (verbose) {
             message("Adding standard deviations for ", reduc)
@@ -773,11 +804,15 @@ H5ADToH5Seurat <- function(
     if (verbose) {
       message("Saving nearest-neighbor graph as ", graph.name)
     }
-    dfile[['graphs']]$obj_copy_from(
-      src_loc = source,
-      src_name = 'uns/neighbors/distances',
-      dst_name = graph.name
-    )
+    # temporary workaround (see mojaveazure/seurat-disk#10)
+    dfile[["graphs"]][[graph.name]] <- source[["uns/neighbors/distances"]][]
+    # dfile[['graphs']]$obj_copy_from(
+    #   src_loc = source,
+    #   src_name = 'uns/neighbors/distances',
+    #   dst_name = graph.name
+    # )
+    # end temporary workaround
+
     # if (dfile[['graphs']][[graph.name]]$attr_exists(attr_name = 'shape')) {
     if (isTRUE(x = AttrExists(x = dfile[['graphs']], name = 'shape'))) {
       dfile[['graphs']][[graph.name]]$create_attr(
@@ -806,11 +841,14 @@ H5ADToH5Seurat <- function(
       if (verbose) {
         message("Adding ", i, " to miscellaneous data")
       }
-      dfile[['misc']]$obj_copy_from(
-        src_loc = source[['uns']],
-        src_name = i,
-        dst_name = i
-      )
+      # temporary workaround (see mojaveazure/seurat-disk#10)
+      dfile[["misc"]][[i]] <- source[["uns"]][[i]][]
+      # dfile[['misc']]$obj_copy_from(
+      #   src_loc = source[['uns']],
+      #   src_name = i,
+      #   dst_name = i
+      # )
+      # end temporary workaround
     }
   }
   # Add layers
@@ -821,11 +859,14 @@ H5ADToH5Seurat <- function(
     }
     for (layer in names(x = source[['layers']])) {
       layer.assay <- dfile[['assays']]$create_group(name = layer)
-      layer.assay$obj_copy_from(
-        src_loc = dfile[['assays']][[assay]],
-        src_name = 'features',
-        dst_name = 'features'
-      )
+      # temporary workaround (see mojaveazure/seurat-disk#10)
+      layer.assay[["features"]] <- dfile[['assays']][[assay]][["features"]][]
+      # layer.assay$obj_copy_from(
+      #   src_loc = dfile[['assays']][[assay]],
+      #   src_name = 'features',
+      #   dst_name = 'features'
+      # )
+      # end temporary workaround
       layer.assay$create_attr(
         attr_name = 'key',
         robj = UpdateKey(key = layer),
@@ -835,11 +876,14 @@ H5ADToH5Seurat <- function(
         if (verbose) {
           message("Adding layer ", layer, " as ", slot, " in assay ", layer)
         }
-        layer.assay$obj_copy_from(
-          src_loc = source[['layers']],
-          src_name = layer,
-          dst_name = slot
-        )
+        # temporary workaround (see mojaveazure/seurat-disk#10)
+        layer.assay[[slot]] <- source[["layers"]][[layer]][]
+        # layer.assay$obj_copy_from(
+        #   src_loc = source[['layers']],
+        #   src_name = layer,
+        #   dst_name = slot
+        # )
+        # end temporary workaround
         # if (layer.assay[[slot]]$attr_exists(attr_name = 'shape')) {
         if (isTRUE(x = AttrExists(x = layer.assay[[slot]], name = 'shape'))) {
           dims <- rev(x = h5attr(x = layer.assay[[slot]], which = 'shape'))
@@ -1315,11 +1359,14 @@ H5SeuratToH5AD <- function(
     if (length(x = cmdlog) && !is.na(x = cmdlog)) {
       cmdlog <- source[['commands']][[cmdlog]]
       if ('k.param' %in% names(x = cmdlog)) {
-        dgraph[['params']]$obj_copy_from(
-          src_loc = cmdlog,
-          src_name = 'k.param',
-          dst_name = 'n_neighbors'
-        )
+        # temporary workaround (see mojaveazure/seurat-disk#10)
+        dgraph[['params']][["n_neighbors"]] <- cmdlog[["k.param"]][]
+        # dgraph[['params']]$obj_copy_from(
+        #   src_loc = cmdlog,
+        #   src_name = 'k.param',
+        #   dst_name = 'n_neighbors'
+        # )
+        # end temporary workaround
       }
     }
   }
@@ -1348,11 +1395,15 @@ H5SeuratToH5AD <- function(
         if (verbose) {
           message("Adding ", layer.slot, " from ", other, " as a layer")
         }
-        layers$obj_copy_from(
-          src_loc = source[['assays']][[other]],
-          src_name = layer.slot,
-          dst_name = other
-        )
+        # temporary workaround (see mojaveazure/seurat-disk#10)
+        layers[[other]] <- source[['assays']][[other]][[layer.slot]][]
+        # layers$obj_copy_from(
+        #   src_loc = source[['assays']][[other]],
+        #   src_name = layer.slot,
+        #   dst_name = other
+        # )
+        # end temporary workaround
+
         if (layers[[other]]$attr_exists(attr_name = 'dims')) {
           dims <- h5attr(x = layers[[other]], which = 'dims')
           layers[[other]]$create_attr(
@@ -1369,11 +1420,14 @@ H5SeuratToH5AD <- function(
           'features'
         )
         var.name <- paste0(other, '_features')
-        dfile[['var']]$obj_copy_from(
-          src_loc = source[['assays']][[other]],
-          src_name = layer.features,
-          dst_name = var.name
-        )
+        # temporary workaround (see mojaveazure/seurat-disk#10)
+        dfile[['var']][[var.name]] <- source[['assays']][[other]][[layer.features]][]
+        # dfile[['var']]$obj_copy_from(
+        #   src_loc = source[['assays']][[other]],
+        #   src_name = layer.features,
+        #   dst_name = var.name
+        # )
+        # end temporary workaround
         col.order <- h5attr(x = dfile[['var']], which = 'column-order')
         col.order <- c(col.order, var.name)
         dfile[['var']]$attr_rename(
